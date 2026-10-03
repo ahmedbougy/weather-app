@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4facfe;
+            --secondary: #00f2fe;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            --glass-bg: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 25px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        form {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            outline: none;
+        }
+
+        input::placeholder { color: var(--text-sub); }
+
+        input:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 14px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.5);
+        }
+
+        button:active { transform: translateY(0); }
+
+        /* Favorites Section */
+        .favorites-container {
+            margin-bottom: 25px;
+        }
+
+        .fav-title {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fav-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .fav-chip {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fav-chip:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--secondary);
+        }
+
+        .fav-chip .remove-fav {
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        /* Error Box */
+        .error {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.15);
+            padding: 16px;
+            border-radius: 14px;
+            margin-top: 20px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            backdrop-filter: blur(5px);
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Weather Box */
+        .weather {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 25px;
+            border-radius: 18px;
+            margin-top: 25px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .weather-header p {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .fav-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: none;
+            padding: 5px;
+        }
+
+        .fav-btn:hover {
+            transform: scale(1.2);
+            box-shadow: none;
+        }
+
+        hr {
+            border: none;
+            height: 1px;
+            background: var(--glass-border);
+            margin-bottom: 15px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .weather p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .weather p strong { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🌤️ Weather App</h1>
+        
+        <form method="post" id="weatherForm">
+            <input type="text" id="cityInput" name="city" placeholder="Enter city (e.g., Constantine,DZ)" required>
+            <button type="submit" id="searchBtn">Search</button>
+        </form>
+
+        <!-- قائمة المدن المفضلة -->
+        <div class="favorites-container" id="favContainer" style="display: none;">
+            <div class="fav-title">⭐ Favorites</div>
+            <div class="fav-chips" id="favChips"></div>
+        </div>
+        
+        {% if error %}
+        <div class="error">
+            ⚠️️ {{ error }}
+        </div>
+        {% endif %}
+        
+        {% if weather %}
+        <div class="weather">
+            <div class="weather-header">
+                <p>🌤️ Weather in {{ weather.name }}, {{ weather.country }}</p>
+                <button type="button" class="fav-btn" id="addFavBtn" title="Add to Favorites">⭐</button>
+            </div>
+            <hr>
+            <div class="weather-grid">
+                <p>🌡️ Temperature: {{ weather.temp }}°C (feels like {{ weather.feels_like }}°C)</p>
+                <p>📊 Min: {{ weather.temp_min }}°C | Max: {{ weather.temp_max }}°C</p>
+                <p>💧 Humidity: {{ weather.humidity }}%</p>
+                <p>🌬️ Pressure: {{ weather.pressure }} hPa</p>
+                <p>👁️ Visibility: {{ weather.visibility }} m</p>
+                <p>💨 Wind: {{ weather.wind_speed }} m/s at {{ weather.wind_deg }}°</p>
+                <p>☁️ Clouds: {{ weather.clouds }}%</p>
+                <p>📝 Condition: {{ weather.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // --- Web Audio API (المؤثرات الصوتية بدون ملفات خارجية) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } else if (type === 'fav') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            }
+        }
+
+        // --- إدراج الصوت على الأزرار ---
+        document.getElementById('searchBtn')?.addEventListener('click', () => playSound('click'));
+
+        // --- إدارة المفضلة عبر LocalStorage ---
+        const favContainer = document.getElementById('favContainer');
+        const favChips = document.getElementById('favChips');
+        const addFavBtn = document.getElementById('addFavBtn');
+        const cityInput = document.getElementById('cityInput');
+
+        function getFavorites() {
+            return JSON.parse(localStorage.getItem('weather_favs') || '[]');
+        }
+
+        function saveFavorites(favs) {
+            localStorage.setItem('weather_favs', JSON.stringify(favs));
+            renderFavorites();
+        }
+
+        function renderFavorites() {
+            const favs = getFavorites();
+            if (favs.length === 0) {
+                favContainer.style.display = 'none';
+                return;
+            }
+            favContainer.style.display = 'block';
+            favChips.innerHTML = '';
+            favs.forEach(city => {
+                const chip = document.createElement('div');
+                chip.className = 'fav-chip';
+                chip.innerHTML = `📍 ${city} <span class="remove-fav" data-city="${city}">&times;</span>`;
+                
+                chip.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('remove-fav')) {
+                        e.stopPropagation();
+                        playSound('click');
+                        const cityToRemove = e.target.getAttribute('data-city');
+                        saveFavorites(getFavorites().filter(c => c !== cityToRemove));
+                    } else {
+                        playSound('click');
+                        cityInput.value = city;
+                        document.getElementById('weatherForm').submit();
+                    }
+                });
+                favChips.appendChild(chip);
+            });
+        }
+
+        {% if weather %}
+        const currentCity = "{{ weather.name }},{{ weather.country }}";
+        addFavBtn?.addEventListener('click', () => {
+            playSound('fav');
+            let favs = getFavorites();
+            if (!favs.includes(currentCity)) {
+                favs.push(currentCity);
+                saveFavorites(favs);
+            }
+        });
+        {% endif %}
+
+        // العرض الأول للمفضلة عند التحميل
+        renderFavorites();
+    </script>
+</body>
+</html>
