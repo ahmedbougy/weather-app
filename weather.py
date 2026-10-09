@@ -1,7 +1,15 @@
 import requests
 from dotenv import load_dotenv
 import os
+import logging 
+file_path = os.path.dirname(os.path.abspath(__file__))
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filename=os.path.join(file_path,'app.log'),
+    filemode='a'
 
+)
 load_dotenv()
 api_key = os.getenv('OPENWEATHER_API_KEY')
 
@@ -28,15 +36,19 @@ def get_coordinates(city) :
     try :
         response = requests.get(url=GEO_URL , params=params,timeout=10)
     except requests.exceptions.ConnectionError :
+        logging.error('No internet connection')
         raise APIConnectionError('No internet connection')
     except requests.exceptions.Timeout :
+        logging.error('Request timed out')
         raise APIConnectionError('Request timed out')
 
     if not response.ok :
+        logging.error(f'API error: {response.status_code}')
         raise APIConnectionError(f'API error: {response.status_code}')
 
     data = response.json()
     if not data :
+        logging.error(f'City not found: {city}')
         raise CityNotFoundError(f'City not found: {city}')
 
     return data[0]['lat'], data[0]['lon']
@@ -55,11 +67,14 @@ def get_weather(lat,lon,lang) :
     try :
         response = requests.get(url=WEATHER_URL , params=params , timeout=10)
     except requests.exceptions.ConnectionError :
+        logging.error('No internet connection')
         raise APIConnectionError('No internet connection')
     except requests.exceptions.Timeout :
+        logging.error('Request timed out')
         raise APIConnectionError('Request timed out')
 
     if not response.ok :
+        logging.error(f'API error: {response.status_code}')
         raise APIConnectionError(f'API error: {response.status_code}')
            
     data = response.json()
