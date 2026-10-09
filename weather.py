@@ -8,6 +8,16 @@ api_key = os.getenv('OPENWEATHER_API_KEY')
 GEO_URL = 'https://api.openweathermap.org/geo/1.0/direct'
 WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather'
 
+class WeatherAppError(Exception) :
+    #the origon of all Error
+    pass
+
+class CityNotFoundError(WeatherAppError):
+    pass
+
+class APIConnectionError(WeatherAppError):
+    pass
+
 
 def get_coordinates(city) :
     params = {
@@ -16,25 +26,21 @@ def get_coordinates(city) :
         'limit': 1,
     }
     try :
-        response = requests.get(url=GEO_URL , params=params)
+        response = requests.get(url=GEO_URL , params=params,timeout=10)
+    except requests.exceptions.ConnectionError :
+        raise APIConnectionError('No internet connection')
+    except requests.exceptions.Timeout :
+        raise APIConnectionError('Request timed out')
 
-        if not response.ok:
-            return response.status_code, None
-            
-        data = response.json()
+    if not response.ok :
+        raise APIConnectionError(f'API error: {response.status_code}')
 
-        if not data :
-            
-            return None,None
-        else :
-            lat = data[0]['lat']
-            lon = data[0]['lon']
+    data = response.json()
+    if not data :
+        raise CityNotFoundError(f'City not found: {city}')
 
-            return lat,lon
-    except requests.exceptions.ConnectionError:
-       
-        return 'Connection_Error',None
-    
+    return data[0]['lat'], data[0]['lon']
+
 def get_weather(lat,lon,lang) :
     if lang != 'ar' and lang != 'en' :
         lang = 'en'
@@ -45,68 +51,68 @@ def get_weather(lat,lon,lang) :
         'lang':lang,
         'units':'metric'
     }
+
     try :
-        response = requests.get(url=WEATHER_URL , params=params)
+        response = requests.get(url=WEATHER_URL , params=params , timeout=10)
+    except requests.exceptions.ConnectionError :
+        raise APIConnectionError('No internet connection')
+    except requests.exceptions.Timeout :
+        raise APIConnectionError('Request timed out')
 
-        status_code = response.status_code 
+    if not response.ok :
+        raise APIConnectionError(f'API error: {response.status_code}')
+           
+    data = response.json()
+    
+    description_list = data['weather']
+    description = description_list[0]['description']
+    
+    main_data = data['main']
+    temp = main_data['temp']
+    feels_like = main_data['feels_like']
+    temp_min = main_data['temp_min']
+    temp_max = main_data['temp_max']
+    pressure = main_data['pressure']
+    humidity = main_data['humidity']
+    sea_level = main_data.get('sea_level','N/A')
+    grnd_level = main_data.get('grnd_level','N/A')
+
+    visibility = data['visibility']
+    wind = data['wind']
+    wind_speed = wind['speed']
+    wind_deg = wind['deg']
+    wind_gust = wind.get('gust')
+
+    clouds = data['clouds']['all']
+
+    sys = data['sys']
+    country = sys['country']
+
+    timezone = data['timezone']
+    name = data['name']
+
+    weather_info = {
+        "description": description,
+        "temp": temp,
+        "feels_like": feels_like,
+        "temp_min": temp_min,
+        "temp_max": temp_max,
+        "pressure": pressure,
+        "humidity": humidity,
+        "sea_level": sea_level,
+        "grnd_level": grnd_level,
+        "visibility": visibility,
+        "wind_speed": wind_speed,
+        "wind_deg": wind_deg,
+        "wind_gust": wind_gust,
+        "clouds": clouds,
+        "country": country,
+        "timezone": timezone,
+        "name": name
+    }
+
+    return weather_info
         
-        if response.ok :
-            response = response.json()
-            
-            description_list = response['weather']
-            description = description_list[0]['description']
-            
-            main_data = response['main']
-            temp = main_data['temp']
-            feels_like = main_data['feels_like']
-            temp_min = main_data['temp_min']
-            temp_max = main_data['temp_max']
-            pressure = main_data['pressure']
-            humidity = main_data['humidity']
-            sea_level = main_data.get('sea_level','N/A')
-            grnd_level = main_data.get('grnd_level','N/A')
-
-            visibility = response['visibility']
-            wind = response['wind']
-            wind_speed = wind['speed']
-            wind_deg = wind['deg']
-            wind_gust = wind.get('gust')
-
-            clouds = response['clouds']['all']
-
-            sys = response['sys']
-            country = sys['country']
-
-            timezone = response['timezone']
-            name = response['name']
-
-            weather_info = {
-                "description": description,
-                "temp": temp,
-                "feels_like": feels_like,
-                "temp_min": temp_min,
-                "temp_max": temp_max,
-                "pressure": pressure,
-                "humidity": humidity,
-                "sea_level": sea_level,
-                "grnd_level": grnd_level,
-                "visibility": visibility,
-                "wind_speed": wind_speed,
-                "wind_deg": wind_deg,
-                "wind_gust": wind_gust,
-                "clouds": clouds,
-                "country": country,
-                "timezone": timezone,
-                "name": name
-            }
-
-            return weather_info
-        else :
-            print(f"Wrong : {status_code}")
-            return None
-    except requests.exceptions.ConnectionError:
-        print("No internet connection")
-        return None
 
 def display_weather(weather_info,lang):
     if lang != 'ar' and lang != 'en' :
@@ -145,22 +151,19 @@ def display_weather(weather_info,lang):
 def main() :
     lang = input("Language (ar/en): ").strip() or 'en'
     city = input('Enter the name of the city :\n')
-    coordinates = get_coordinates(city=city)
-    
-    if coordinates[0] is None:
-        print("There is no city by that name; try another one.")
+    try :
+        lat , lon =  get_coordinates(city=city)
+        weather = get_weather(lat=lat, lon=lon, lang=lang)
+        print(display_weather(weather, lang))
 
-    elif coordinates[0] == 'Connection_Error' :
-         print("No internet connection")
-
-    elif isinstance(coordinates[0],int) :
-        print(f"API error: {coordinates[0]}")
-
-    else:
-        lat,lon = coordinates
-        weather_dic = get_weather(lat,lon,lang)
-        weather_str = display_weather(weather_info=weather_dic,lang=lang)
-        print(weather_str)
+    except APIConnectionError as e :
+        print(e)
+    except CityNotFoundError as e :
+        print(e)
+    except WeatherAppError as e:
+        print(f"Unexpected error: {e}")
+    except Exception as e:               # ← (اختياري) أي شيء آخر
+        print(e)
 
 if __name__ == '__main__' :
     main()
