@@ -1,4 +1,5 @@
 # 🌤️ Weather App
+![Weather App Screenshot](screenshot.png)
 
 A simple weather web app built with Python, Flask, and OpenWeatherMap API.
 
