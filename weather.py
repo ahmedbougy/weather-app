@@ -2,11 +2,11 @@ import requests
 from dotenv import load_dotenv
 import os
 import logging 
-file_path = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    filename=os.path.join(file_path,'app.log'),
+    filename=os.path.join(BASE_DIR,'app.log'),
     filemode='a'
 
 )
@@ -17,7 +17,7 @@ GEO_URL = 'https://api.openweathermap.org/geo/1.0/direct'
 WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather'
 
 class WeatherAppError(Exception) :
-    #the origon of all Error
+    """Base class for all weather app errors."""
     pass
 
 class CityNotFoundError(WeatherAppError):
@@ -27,7 +27,21 @@ class APIConnectionError(WeatherAppError):
     pass
 
 
-def get_coordinates(city) :
+def get_coordinates(city: str) -> tuple[float, float]:
+    """
+    Get latitude and longitude for a city name.
+
+    Args:
+        city(str): City name(e.g, "Constantine,DZ")
+
+    Returns:
+        tuple: (latitude, longitude) 
+
+    Raises:
+        CityNotFoundError: if city not found
+        APIConnectionError: if network or API fails
+    """
+
     params = {
         'q':city,
         'appid':api_key ,
@@ -53,8 +67,23 @@ def get_coordinates(city) :
 
     return data[0]['lat'], data[0]['lon']
 
-def get_weather(lat,lon,lang) :
-    if lang != 'ar' and lang != 'en' :
+def get_weather(lat: float, lon: float, lang: str ='en') -> dict :
+    """
+    Get weather data for coordinates.
+
+    Args:
+        lat(float): Latitude.
+        lon(float): Longitude.
+        lang(str): Language code ('en' or 'ar'). Default to 'en'.
+        
+    Returns:
+        dict: Weather information.
+
+    Raises:
+        APIConnectionError: if network or API fails.
+
+    """
+    if lang not in ('en' , 'ar') :
         lang = 'en'
     params = {
         'lat':lat,
@@ -129,8 +158,19 @@ def get_weather(lat,lon,lang) :
     return weather_info
         
 
-def display_weather(weather_info,lang):
-    if lang != 'ar' and lang != 'en' :
+def display_weather(weather_info: dict, lang: str ='en') -> str:
+    """
+    Format weather data for display.
+
+    Args:
+        weather_info(dict): Weather data from get_weather.
+        lang(str): Language code ('en' or 'ar'). Defaults to 'en'
+
+    Returns:
+        str: Formatted weather report.
+
+    """
+    if lang not in ('en' , 'ar') :
         lang = 'en'
 
     if weather_info is None:
@@ -163,7 +203,7 @@ def display_weather(weather_info,lang):
 📝  Condition: {weather_info['description']}
     '''
 
-def main() :
+def main() -> None :
     lang = input("Language (ar/en): ").strip() or 'en'
     city = input('Enter the name of the city :\n')
     try :
