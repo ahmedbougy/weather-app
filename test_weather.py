@@ -118,3 +118,7 @@ def test_display_weather_none():
     result = display_weather(None)
     assert result == 'No data available.'
     assert isinstance(result, str)
+
+def test_branch_demo():
+    assert 1+1 == 2
+    
