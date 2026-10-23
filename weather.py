@@ -105,7 +105,7 @@ def get_weather(lat: float, lon: float, lang: str ='en') -> dict :
     if not response.ok :
         logging.error(f'API error: {response.status_code}')
         raise APIConnectionError(f'API error: {response.status_code}')
-           
+            
     data = response.json()
     
     description_list = data['weather']
