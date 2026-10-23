@@ -1,4 +1,71 @@
-from weather import display_weather
+from weather import display_weather , get_coordinates , get_weather , CityNotFoundError , APIConnectionError
+from unittest.mock import patch
+import pytest
+@patch('weather.requests.get')
+def test_get_coordinates_success(mok_get) :
+    mok_response = mok_get.return_value
+    mok_response.ok = True
+    mok_response.json.return_value = [
+        {'lat': 36.36, 'lon': 6.60, 'name': 'Constantine'}
+    ]
+
+    lat , lon = get_coordinates('Constantine,DZ')
+
+    assert lat == 36.36
+    assert lon == 6.60
+
+@patch('weather.requests.get')
+def test_get_weather_success(mok_get) :
+    mok_response = mok_get.return_value
+    mok_response.ok = True
+    mok_response.json.return_value = {
+    'weather': [{'description': 'clear sky'}],
+    'main': {
+        'temp': 20.0,
+        'feels_like': 19.0,
+        'temp_min': 18.0,
+        'temp_max': 22.0,
+        'pressure': 1015,
+        'humidity': 50,
+        # sea_level, grnd_level اختيارية (يستخدم get)
+    },
+    'visibility': 10000,
+    'wind': {'speed': 5.0, 'deg': 180},
+    'clouds': {'all': 10},
+    'sys': {'country': 'DZ'},
+    'timezone': 3600,
+    'name': 'Constantine',
+    }
+    
+    result = get_weather(36.36, 6.60, 'en')
+    assert result['temp'] == 20.0
+    assert result['description'] == 'clear sky'
+    assert result['name'] == 'Constantine'
+    assert isinstance(result, dict)
+
+@patch('weather.requests.get')
+def test_get_weather_APIConnectionError(mock_get) :
+    mock_response = mock_get.return_value
+    mock_response.ok = False
+    with pytest.raises(APIConnectionError) :
+        get_weather(36.36, 6.60, 'en')
+        
+@patch('weather.requests.get')
+def test_get_coordinates_city_not_found(mock_get) :
+    mock_response = mock_get.return_value
+    mock_response.ok = True
+    mock_response.json.return_value = []   # ← قائمة فارغة
+    
+    with pytest.raises(CityNotFoundError):
+        get_coordinates('xyzabc123')
+
+@patch('weather.requests.get')
+def test_get_coordinates_APIConnectionError(mock_get) : 
+    mock_response = mock_get.return_value
+    mock_response.ok = False
+    with pytest.raises(APIConnectionError) :
+        get_coordinates('Constantine.DZ')
+
 
 def test_display_weather_english() :
     fake_data = {
