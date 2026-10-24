@@ -44,3 +44,7 @@ Credits
 Python logic & API integration: Ahmed Bougy
 
 HTML/CSS/JS template: assisted by Gemini AI
+
+## Testing
+
+this project use 'pytest' for testing.
