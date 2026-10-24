@@ -1,19 +1,8 @@
 from weather import display_weather , get_coordinates , get_weather , CityNotFoundError , APIConnectionError
 from unittest.mock import patch
 import pytest
-@patch('weather.requests.get')
-def test_get_coordinates_success(mok_get) :
-    mok_response = mok_get.return_value
-    mok_response.ok = True
-    mok_response.json.return_value = [
-        {'lat': 36.36, 'lon': 6.60, 'name': 'Constantine'}
-    ]
-
-    lat , lon = get_coordinates('Constantine,DZ')
-
-    assert lat == 36.36
-    assert lon == 6.60
-
+import requests
+# get weather function Teste
 @patch('weather.requests.get')
 def test_get_weather_success(mok_get) :
     mok_response = mok_get.return_value
@@ -49,7 +38,33 @@ def test_get_weather_APIConnectionError(mock_get) :
     mock_response.ok = False
     with pytest.raises(APIConnectionError) :
         get_weather(36.36, 6.60, 'en')
-        
+
+@patch('weather.requests.get')
+def test_get_weather_timeout(mock_get):
+    mock_get.side_effect = requests.exceptions.Timeout('Request timed out')
+    with pytest.raises(APIConnectionError):
+        get_weather(36.36, 6.60, 'en')
+
+@patch('weather.requests.get')
+def test_get_weather_connection_error(mock_get):
+    mock_get.side_effect = requests.exceptions.ConnectionError('No internet connection')
+    with pytest.raises(APIConnectionError):
+        get_weather(36.36, 6.60, 'en')
+
+#get coordinates function Test
+@patch('weather.requests.get')
+def test_get_coordinates_success(mok_get) :
+    mok_response = mok_get.return_value
+    mok_response.ok = True
+    mok_response.json.return_value = [
+        {'lat': 36.36, 'lon': 6.60, 'name': 'Constantine'}
+    ]
+
+    lat , lon = get_coordinates('Constantine,DZ')
+
+    assert lat == 36.36
+    assert lon == 6.60
+
 @patch('weather.requests.get')
 def test_get_coordinates_city_not_found(mock_get) :
     mock_response = mock_get.return_value
@@ -66,7 +81,19 @@ def test_get_coordinates_APIConnectionError(mock_get) :
     with pytest.raises(APIConnectionError) :
         get_coordinates('Constantine.DZ')
 
+@patch('weather.requests.get')
+def test_get_coordinates_timeout(mock_get):
+    mock_get.side_effect = requests.exceptions.Timeout('Request timed out')
+    with pytest.raises(APIConnectionError):
+        get_coordinates('Constantine,DZ')
 
+@patch('weather.requests.get')
+def test_get_coordinates_connection_error(mock_get):
+    mock_get.side_effect = requests.exceptions.ConnectionError('No internet connection')
+    with pytest.raises(APIConnectionError):
+        get_coordinates('Constantine,DZ')
+
+#display weather Test
 def test_display_weather_english() :
     fake_data = {
         'name': 'Constantine',
@@ -119,6 +146,3 @@ def test_display_weather_none():
     assert result == 'No data available.'
     assert isinstance(result, str)
 
-def test_branch_demo():
-    assert 1+1 == 2
-    
